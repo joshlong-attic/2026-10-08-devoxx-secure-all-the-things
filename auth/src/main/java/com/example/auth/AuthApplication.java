@@ -16,8 +16,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.sql.DataSource;
 import java.security.Principal;
 import java.util.Map;
+//
+//@EnableMultiFactorAuthentication(authorities = {
 
-//@EnableMultiFactorAuthentication(authorities = {})
+/// /        FactorGrantedAuthority.PASSWORD_AUTHORITY,
+/// /        FactorGrantedAuthority.OTT_AUTHORITY
+//})
 @SpringBootApplication
 public class AuthApplication {
 
@@ -38,54 +42,29 @@ public class AuthApplication {
     }
 
     @Bean
-    Customizer<HttpSecurity> httpSecurityCustomizer() {
-//        var amf = AuthorizationManagerFactories.multiFactor()
-//                .requireFactor(b -> b.validDuration(Duration.ofSeconds(10)).passwordAuthority())
-//                .requireFactor(RequiredFactor.Builder::ottAuthority)
+    Customizer<HttpSecurity> securityCustomizer() {
+//        var amf = AuthorizationManagerFactories
+//                .multiFactor()
+//                .requireFactors(FactorGrantedAuthority.OTT_AUTHORITY, FactorGrantedAuthority.PASSWORD_AUTHORITY)
+////                .requireFactors(bu -> bu.requireFactor(b->b.validDuration(Duration.ofSeconds(10))))
 //                .build();
-        return security -> security
-                .oauth2AuthorizationServer(a -> a.oidc(Customizer.withDefaults()))
+        return http -> http
+                .oauth2AuthorizationServer(as -> as.oidc(Customizer.withDefaults()))
 //                .authorizeHttpRequests(a -> a
-//                        .requestMatchers("/me").authenticated()
 //                        .requestMatchers("/admin").access(amf.hasRole("ADMIN"))
 //                )
                 .webAuthn(a -> a
-                        .allowedOrigins("http://localhost:8080")
-                        .rpName("bootiful") // todo does this work without it?
                         .rpId("localhost")
+                        .allowedOrigins("http://localhost:8080")
                 )
-                .oneTimeTokenLogin(ott -> ott
-                        .tokenGenerationSuccessHandler((_, response, oneTimeToken) -> {
+                .oneTimeTokenLogin(ott -> ott.tokenGenerationSuccessHandler((_, response, oneTimeToken) -> {
 
-                                    response.getWriter().write("you've got console mail!");
-                                    response.setContentType(MediaType.TEXT_PLAIN_VALUE);
-                                    IO.println(oneTimeToken.getUsername() +
-                                            ", please go http://localhost:8080/login/ott?token=" +
-                                            oneTimeToken.getTokenValue());
-                                }
-                        ));
+                    response.getWriter().write("you've got console mail!");
+                    response.setContentType(MediaType.TEXT_PLAIN_VALUE);
+
+                    IO.println(oneTimeToken.getUsername() + "," +
+                            " please go to http://localhost:8080/login/ott?token=" + oneTimeToken.getTokenValue());
+                }));
     }
 
-//    @Bean
-//    SecurityFilterChain securityFilterChain(HttpSecurity security) {
-//        return security
-//                .formLogin(Customizer.withDefaults())
-//                .httpBasic(Customizer.withDefaults())
-//                .authorizeHttpRequests(a -> a.anyRequest().authenticated())
-//                .build();
-//    }
-
-    /*
-    @Bean
-    InMemoryUserDetailsManager inMemoryUserDetailsManager(PasswordEncoder passwordEncoder) {
-        var builder = User.builder().roles("USER");
-        var pw1 = passwordEncoder.encode("pw");
-        var pw2 = passwordEncoder.encode("pw");
-        IO.println(pw1 + System.lineSeparator() + pw2);
-        return new InMemoryUserDetailsManager(
-                builder.username("daniel").password(pw1).build(),
-                builder.username("josh").password(pw2).build()
-        );
-    }
-     */
 }

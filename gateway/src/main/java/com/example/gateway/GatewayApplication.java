@@ -20,6 +20,20 @@ public class GatewayApplication {
         SpringApplication.run(GatewayApplication.class, args);
     }
 
+    // :8080/api/message -> :8081/message
+    // :8080/index.html -> :8020/index.html
+
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    RouterFunction<ServerResponse> apiRoute() {
+        return route()
+                .GET("/api/**", http())
+                .before(BeforeFilterFunctions.uri("http://localhost:8081"))
+                .before(BeforeFilterFunctions.rewritePath("/api", "/"))
+                .filter(TokenRelayFilterFunctions.tokenRelay())
+                .build();
+    }
+
     @Bean
     @Order(Ordered.LOWEST_PRECEDENCE)
     RouterFunction<ServerResponse> uiRoute() {
@@ -28,20 +42,4 @@ public class GatewayApplication {
                 .before(BeforeFilterFunctions.uri("http://localhost:8020"))
                 .build();
     }
-
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    @Bean
-    RouterFunction<ServerResponse> apiRoute() {
-        return route()
-                .GET("/api/**", http())
-                .before(BeforeFilterFunctions.uri("http://localhost:8081"))
-                .filter(TokenRelayFilterFunctions.tokenRelay())
-                .before(BeforeFilterFunctions.rewritePath("/api", "/"))
-                .build();
-
-    }
 }
-
-
-// :8080/index.html -> :8020/index.html
-// :8080/api/message -> :8081/message
