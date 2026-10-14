@@ -1,13 +1,22 @@
 <html> 
- <body>
- <script>
+<head>
+  <title>
+    Hello! 
+  </title>
+</head>
+<body>
+<script>
   addEventListener('load', async e => {
-
     const r =await  fetch('/api/message')
     const json = await r.json()
 	  const m = json['message']
 	  console.log(m);
+    document.getElementById('m').innerHTML = m 
   }) 
- </script>
- </body>
+</script>
+ 
+ <div id="m">
+ </div>
+
+</body>
 </html>
